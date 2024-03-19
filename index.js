@@ -61,12 +61,18 @@ app.use(express.json());
 // Initialize WhatsApp client
 const client = new Client();
 
-client.on('qr', async (qr) => {
-    console.log('QR Code received, scan it using your WhatsApp app');
+// Function to generate and save QR code image
+async function generateQRCode(qr) {
     // Generate QR code image
     const qrImage = await qrcode.toDataURL(qr, { errorCorrectionLevel: 'H' });
     // Save QR code image to file
     await fs.writeFile('qrcode.png', qrImage.replace(/^data:image\/png;base64,/, ''), 'base64');
+}
+
+client.on('qr', async (qr) => {
+    console.log('QR Code received, scan it using your WhatsApp app');
+    // Generate and save QR code image
+    await generateQRCode(qr);
 });
 
 client.on('authenticated', (session) => {
@@ -94,7 +100,6 @@ app.get('/qr-code', async (req, res) => {
 // API endpoint to send a message
 app.post('/send-message', (req, res) => {
     const { number, message } = req.body;
-    console.log("These is request",req.body)
     if (!number || !message) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -110,3 +115,4 @@ app.post('/send-message', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
